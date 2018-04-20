@@ -1,4 +1,11 @@
 [
   { "user": "burlak" },
+  { "user": "taras" },
+  { "blaBla": [
+    { "user": "" },
+    { "user": "" }
+  ]},
+  { "user": "" },
+  { "user": "taras" },
   { "user": "elina" }
 ]

@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
+/******/ 	return __webpack_require__(__webpack_require__.s = 5);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -300,7 +300,7 @@ function pug_rethrow(err, filename, lineno, str){
     throw err;
   }
   try {
-    str = str || __webpack_require__(8).readFileSync(filename, 'utf8')
+    str = str || __webpack_require__(9).readFileSync(filename, 'utf8')
   } catch (ex) {
     pug_rethrow(err, null, lineno)
   }
@@ -340,7 +340,7 @@ exports.Message = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _message = __webpack_require__(7);
+var _message = __webpack_require__(8);
 
 var _message2 = _interopRequireDefault(_message);
 
@@ -408,7 +408,7 @@ exports.defaultLogin = exports.Auth = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _auth = __webpack_require__(5);
+var _auth = __webpack_require__(6);
 
 var _auth2 = _interopRequireDefault(_auth);
 
@@ -482,7 +482,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _message = __webpack_require__(1);
 
-var _chat = __webpack_require__(6);
+var _chat = __webpack_require__(7);
 
 var _chat2 = _interopRequireDefault(_chat);
 
@@ -525,47 +525,104 @@ var Chat = exports.Chat = function () {
 "use strict";
 
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.request = request;
+function request(method, path) {
+    var xhr = new XMLHttpRequest();
+
+    return new Promise(function (resolve, reject) {
+
+        xhr.addEventListener('readystatechange', function (_ref) {
+            var target = _ref.target;
+            var readyState = target.readyState,
+                responseText = target.responseText,
+                status = target.status;
+
+            if (readyState === 4) {
+                resolve({ json: responseText, path: path, status: status });
+            }
+        });
+
+        xhr.open(method.toUpperCase(), path);
+        xhr.send();
+    });
+}
+
+// request('GET', '/data.json', (data) => { console.log(data) })
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
 var _auth = __webpack_require__(2);
 
 var _chat = __webpack_require__(3);
 
 var _message = __webpack_require__(1);
 
-var _utils = __webpack_require__(9);
+var _utils = __webpack_require__(4);
 
 window.addEventListener('DOMContentLoaded', function () {
-    console.log(_auth.Auth);
+	var auth = new _auth.Auth(document.querySelector('.js-auth'), {});
+	var chat = new _chat.Chat(document.querySelector('.js-chat'), {});
+	var message = new _message.Message(document.querySelector('.js-message'), {});
 
-    var auth = new _auth.Auth(document.querySelector('.js-auth'), {});
-    var chat = new _chat.Chat(document.querySelector('.js-chat'), {});
-    var message = new _message.Message(document.querySelector('.js-message'), {});
+	window.chat = chat;
+	window.message = message;
+	window.auth = auth;
 
-    window.chat = chat;
-    window.message = message;
-    window.auth = auth;
+	(0, _utils.request)('get', '/data/data.json').then(function (_ref) {
+		var json = _ref.json;
 
-    console.log(1 + 1 + ' test');
+		var dataUsers = JSON.parse(json);
+		Promise.all(dataUsers.reduce(function (res, cur) {
+			//Обрабатываем только если есть значение user
+			if (cur.hasOwnProperty('user')) {
+				res.push((0, _utils.request)('get', '/data/' + cur.user + '.json'));
+			}
+			return res;
+		}, [])).then(function (result) {
+			if (result instanceof Array) {
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
 
-    var list = void 0;
+				try {
+					for (var _iterator = result[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						var user = _step.value;
 
-    (0, _utils.request)('get', '/data/data.json').then(function (data) {
-        return (0, _utils.request)('get', '/data/' + data[0].user + '.json');
-    }, function (err) {
-        return console.log(err);
-    });
-
-    // consooe.log(ilia, elina); // оба были выведены
+						if (user.json && user.status && user.status < 400) {
+							console.log(JSON.parse(user.json));
+						} else {
+							//Почистить и перезаписать data.json?
+						}
+					}
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator.return) {
+							_iterator.return();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
+			}
+		});
+	});
 });
 
-//
-//       index
-//   /     \       \
-//  Auth    Chat   Message
-//           \
-//           Message
-
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var pug = __webpack_require__(0);
@@ -575,7 +632,7 @@ pug_html = pug_html + "\u003Cform" + (pug.attr("class", pug.classes(["auth","pur
 module.exports = template;
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var pug = __webpack_require__(0);
@@ -588,7 +645,7 @@ pug_html = pug_html + "\u003Cdiv" + (pug.attr("class", pug.classes(["chat","pure
 module.exports = template;
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var pug = __webpack_require__(0);
@@ -598,46 +655,10 @@ pug_html = pug_html + "\u003Cform" + (pug.attr("class", pug.classes(["message","
 module.exports = template;
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.request = request;
-function request(method, path, done) {
-    var xhr = new XMLHttpRequest();
-
-    return new Promise(function (resolve, reject) {
-
-        xhr.addEventListener('readystatechange', function (_ref) {
-            var target = _ref.target;
-
-
-            if (target.readyState === 4 && target.status === 200) {
-                resolve(JSON.parse(target.responseText));
-            }
-
-            if (target.readyState === 4 && target.status > 299) {
-                reject(target.status);
-            }
-        });
-
-        xhr.open(method.toUpperCase(), path);
-        xhr.send();
-    });
-}
-
-// request('GET', '/data.json', (data) => { console.log(data) })
 
 /***/ })
 /******/ ]);
